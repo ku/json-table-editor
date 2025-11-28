@@ -896,7 +896,12 @@ impl<'array> ArrayTable<'array> {
                         } else if let Some(value) = entry.value.as_ref() {
                             if !matches!(entry.pointer.value_type, ValueType::Null) {
                                 let label = if value.len() > 1000 {
-                                    CellText::new(&value[0..1000])
+                                    // Find a valid UTF-8 char boundary at or before index 1000
+                                    let mut truncate_index = 1000;
+                                    while truncate_index > 0 && !value.is_char_boundary(truncate_index) {
+                                        truncate_index -= 1;
+                                    }
+                                    CellText::new(&value[0..truncate_index])
                                 } else {
                                     CellText::new(value)
                                 };
