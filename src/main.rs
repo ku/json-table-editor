@@ -173,6 +173,31 @@ impl MyApp<'_> {
             eframe::egui::FontFamily::Name("fa".into()),
             vec!["fa".into()],
         );
+
+        // Load system Japanese font for CJK character support
+        #[cfg(target_os = "macos")]
+        {
+            let font_paths = [
+                "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+                "/System/Library/Fonts/Hiragino Sans GB.ttc",
+                "/Library/Fonts/Arial Unicode.ttf",
+            ];
+            for path in font_paths {
+                if let Ok(font_bytes) = std::fs::read(path) {
+                    let font_data = eframe::egui::FontData::from_owned(font_bytes);
+                    fonts.font_data.insert("japanese".into(), font_data);
+                    // Add Japanese font as fallback for Proportional and Monospace
+                    if let Some(family) = fonts.families.get_mut(&eframe::egui::FontFamily::Proportional) {
+                        family.push("japanese".into());
+                    }
+                    if let Some(family) = fonts.families.get_mut(&eframe::egui::FontFamily::Monospace) {
+                        family.push("japanese".into());
+                    }
+                    break;
+                }
+            }
+        }
+
         cc.egui_ctx.set_fonts(fonts);
         let (sender, receiver) = parking_lot_mpsc::sync_channel::<AsyncEvent>(1);
         // let path = Path::new(args[1].as_str());
